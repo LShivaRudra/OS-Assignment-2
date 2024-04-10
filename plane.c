@@ -24,7 +24,8 @@ struct plane_data{
     int total_weight;
     int plane_type;
     int num_passengers;
-    int departure_status;
+    // int departure_status;
+    int terminate_plane;
 };
 
 struct msgbuf{
@@ -121,22 +122,33 @@ int main(){
     data.plane_id=plane_id;
     data.total_weight=total_weight;
     data.plane_type=plane_type;
-    data.departure_status=0;
+    // data.departure_status=0;
 
-    //message queue
-    struct msgbuf message;
-    key_t key;
-    int msgid;
-
+    /*message queue*/
+    //message to send to ATC
+    struct msgbuf message_send;
+    key_t key_send;
+    int msgid_send;
     // ftok to generate unique key 
-    key = ftok("plane.c", plane_id);
-    msgid = msgget(key, 0666 | IPC_CREAT); 
-    message.msg_type=plane_id;
-    message.data=data;
-    msgsnd(msgid,&message,sizeof(message),0);
+    key_send = ftok("plane.c", plane_id);
+    msgid_send = msgget(key_send, 0666 | IPC_CREAT); 
+    message_send.msg_type=plane_id;
+    message_send.data=data;
+    msgsnd(msgid_send,&message_send,sizeof(message_send),0);
 
-    while(message.data.departure_status==0){}//wait till ATC confirms departure
-    sleep(3);//boarding/loading
+    //message to recv from ATC
+    struct msgbuf message_recv;
+    key_t key_recv;
+    int msgid_recv;
+    // ftok to generate unique key 
+    key_recv = ftok("airtrafficcontroller.c", plane_id);
+    msgid_recv = msgget(key_recv, 0666 | IPC_CREAT); 
+    msgrcv(msgid_recv, &message_recv, sizeof(message_recv), plane_id, 0); 
+
+    while(message_recv.data.terminate_plane==0){}//wait for the ATC to give termination command(after boarding, travel, deboarding and confirmation from the airport)
+
+    msgctl(msgid_send, IPC_RMID, NULL); 
+    msgctl(msgid_recv, IPC_RMID, NULL); 
 
     return 0;
 }
