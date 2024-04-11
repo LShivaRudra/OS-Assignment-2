@@ -55,7 +55,7 @@ int main(){
             perror("Error while receiving msg!");
             exit(1);
         }
-        else if(message_recv.msg_type==25 && message_recv.data.termination_from_cleanup==1){
+        else if(message_recv.msg_type==21 && message_recv.data.termination_from_cleanup==1){
             printf("Received termination request from the cleanup!\n");
             for(int i=1;i<=num_airports;i++){
                 struct msgbuf airport_termination_msg;
@@ -88,18 +88,6 @@ int main(){
                 msgsnd(msgid,&message_send_plane,sizeof(message_send_plane),0);
             }
         }
-
-
-        // if(message_recv.data.means_of_comm==1){
-        //     struct msgbuf message_send;
-        //     message_send=message_recv;
-        //     message_send.data.means_of_comm=4;
-        //     message_send.msg_type=message_recv.data.airport_num_departure+10;//to differentiate between the plane and airport process
-        //     msgsnd(msgid,&message_send,sizeof(message_send),0);
-            
-        // }
-        // /*Check for the termination from the cleanup*/
-        // msgrcv(msgid, &message_recv, sizeof(message_recv), 0, 0); 
     }
     
     return 0;
