@@ -36,7 +36,7 @@ int main(){
     scanf("%d",&num_airports);
 
     FILE *fptr;
-    fptr = fopen("AirTrafficController.txt","w");
+    fptr = fopen("AirTrafficController.txt","a");
     if(fptr== NULL){
         perror("unable to open file");
         exit(1);
@@ -70,25 +70,49 @@ int main(){
             struct msgbuf message_send_departure;
             message_send_departure=message_recv;
             message_send_departure.msg_type = message_recv.data.airport_num_departure+10;
-            msgsnd(msgid,&message_send_departure,sizeof(message_send_departure),0);
+            if(msgsnd(msgid,&message_send_departure,sizeof(message_send_departure),0)==-1){
+                perror("Error in msgsnd!\n");
+                exit(1);
+            }
+            else{
+                printf("Message sent to departure airport!\n");
+                printf("The msg type is %ld\n",message_send_departure.msg_type);
+            }
         }
         else if(message_recv.msg_type>=10 && message_recv.msg_type<=20){
             if(message_recv.data.departure_status==1 && message_recv.data.arrival_status==0){
                 struct msgbuf message_send_arrival;
                 message_send_arrival=message_recv;
                 message_send_arrival.msg_type = message_recv.data.airport_num_arrival+10;
-                msgsnd(msgid,&message_send_arrival,sizeof(message_send_arrival),0);
-
-                fprintf(fptr, "Plane %d has departed from Airport %d and will land at Airport %d.\n", message_recv.data.plane_id,message_recv.data.airport_num_departure,message_recv.data.airport_num_arrival);
+                if(msgsnd(msgid,&message_send_arrival,sizeof(message_send_arrival),0)==-1){
+                    perror("Error in msgsnd!\n");
+                    exit(1);
+                }
+                else{
+                    printf("Message sent to arrival airport!\n");
+                    printf("The msg type is %ld\n",message_send_arrival.msg_type);
+                    fprintf(fptr, "Plane %d has departed from Airport %d and will land at Airport %d.\n", message_recv.data.plane_id,message_recv.data.airport_num_departure,message_recv.data.airport_num_arrival);
+                    printf("Plane %d has departed from Airport %d and will land at Airport %d.\n", message_recv.data.plane_id,message_recv.data.airport_num_departure,message_recv.data.airport_num_arrival);
+                    fclose(fptr);
+                    fptr = fopen("AirTrafficController.txt", "a");
+                }   
             }
             else if(message_recv.data.departure_status==1 && message_recv.data.arrival_status==1){
                 struct msgbuf message_send_plane;
                 message_send_plane=message_recv;
                 message_send_plane.msg_type = message_recv.data.plane_id;
-                msgsnd(msgid,&message_send_plane,sizeof(message_send_plane),0);
+                if(msgsnd(msgid,&message_send_plane,sizeof(message_send_plane),0)==-1){
+                    perror("Error in msgsnd!\n");
+                    exit(1);
+                }
+                else{
+                    printf("Message sent to plane!\n");
+                    printf("The msg type is %ld\n",message_send_plane.msg_type);
+                }
             }
         }
     }
+    fclose(fptr);
     
     return 0;
 }

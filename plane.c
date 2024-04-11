@@ -139,6 +139,10 @@ int main(){
         exit(1);
     }
 
+    else{
+        printf("Message sent to the ATC!\n");
+    }
+
     //message to recv from ATC
     struct msgbuf message_recv;
     if(msgrcv(msgid, &message_recv, sizeof(message_recv), plane_id, 0)==-1){
@@ -146,17 +150,20 @@ int main(){
         exit(1);
     }
 
-    // while(message_recv.data.terminate_plane==0){}//wait for the ATC to give termination command(after boarding, travel, deboarding and confirmation from the airport)
+    else{
+        if(message_recv.data.departure_status==-1){
+            printf("There was some issue with takeoff! Terminating plane process!\n");
+            exit(1);
+        }
 
-    if(message_recv.data.departure_status==-1){
-        printf("There was some issue with takeoff! Terminating plane process!\n");
-    }
+        while(message_recv.data.arrival_status==0){}//wait till any info abt landing is received from ATC
 
-    else if(message_recv.data.departure_status==1 && message_recv.data.arrival_status==1){
-        printf("Plane <Plane ID> has successfully traveled from Airport %d to Airport %d!\n",data.airport_num_departure,data.airport_num_arrival);
-    }
-    else if(message_recv.data.arrival_status==-1){
-        printf("There was some issue with landing! Terminating plane process!\n");
+        if(message_recv.data.departure_status==1 && message_recv.data.arrival_status==1){
+            printf("Plane <Plane ID> has successfully traveled from Airport %d to Airport %d!\n",data.airport_num_departure,data.airport_num_arrival);
+        }
+        else if(message_recv.data.arrival_status==-1){
+            printf("There was some issue with landing! Terminating plane process!\n");
+        }
     }
 
     return 0;
