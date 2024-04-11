@@ -18,25 +18,17 @@ struct weight_per_customer{
 };
 
 struct msg_data{
-    int means_of_comm;
     int airport_num_arrival;
     int airport_num_departure;
     int plane_id;
     int total_weight;
     int plane_type;
     int num_passengers;
-    // int departure_status;
+    int departure_status;
+    int arrival_status;
     int terminate_plane;
     int termination_from_cleanup;
 };
-/*in the above means_of_comm differentiates the direction of msg flow:
-1 -> plane to ATC 
-2 -> ATC to plane
-3 -> airport to ATC
-4 -> ATC to airport
-5 -> cleanup to ATC
-6 -> ATC to cleanup
-*/
 
 struct msgbuf{
     long msg_type;
@@ -127,7 +119,6 @@ int main(){
     printf("Enter Airport Number for Arrival: ");
     scanf("%d",&airport_num_arrival);
 
-    data.means_of_comm=1;
     data.airport_num_arrival=airport_num_arrival;
     data.airport_num_departure=airport_num_departure;
     data.plane_id=plane_id;
@@ -143,13 +134,30 @@ int main(){
     struct msgbuf message_send;
     message_send.msg_type=plane_id;
     message_send.data=data;
-    msgsnd(msgid,&message_send,sizeof(message_send),0);
+    if(msgsnd(msgid,&message_send,sizeof(message_send),0)==-1){
+        perror("Error in sending msg!");
+        exit(1);
+    }
 
     //message to recv from ATC
     struct msgbuf message_recv;
-    msgrcv(msgid, &message_recv, sizeof(message_recv), plane_id, 0); 
+    if(msgrcv(msgid, &message_recv, sizeof(message_recv), plane_id, 0)==-1){
+        perror("Error in receiving msg!");
+        exit(1);
+    }
 
-    while(message_recv.data.terminate_plane==0){}//wait for the ATC to give termination command(after boarding, travel, deboarding and confirmation from the airport)
+    // while(message_recv.data.terminate_plane==0){}//wait for the ATC to give termination command(after boarding, travel, deboarding and confirmation from the airport)
+
+    if(message_recv.data.departure_status==-1){
+        printf("There was some issue with takeoff! Terminating plane process!\n");
+    }
+
+    else if(message_recv.data.departure_status==1 && message_recv.data.arrival_status==1){
+        printf("Plane <Plane ID> has successfully traveled from Airport %d to Airport %d!\n",data.airport_num_departure,data.airport_num_arrival);
+    }
+    else if(message_recv.data.arrival_status==-1){
+        printf("There was some issue with landing! Terminating plane process!\n");
+    }
 
     return 0;
 }
