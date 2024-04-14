@@ -13,6 +13,7 @@
 #define MIN_LOAD_CAPACITY 1000
 #define MAX_LOAD_CAPACITY 12000
 #define BACKUP_LOAD_CAPACITY 15000
+#define MIN_DIFF 16000
 
 pthread_t tids[MAX_PLANES];//max number of planes is 10
 pthread_mutex_t lock;
@@ -45,7 +46,29 @@ typedef struct{
 void* thread_func(void *arg){
     Airport *msg = (Airport *)arg;
     printf("Hello to the thread func!\n");
-    printf("plane id:%d,total_weight:%d,num_pass:%d",msg->recv_data.data.plane_id,msg->recv_data.data.total_weight,msg->recv_data.data.num_passengers);
+    printf("plane id:%d,total_weight:%d,num_pass:%d\n", msg->recv_data.data.plane_id, msg->recv_data.data.total_weight, msg->recv_data.data.num_passengers);
+
+    printf("airport_num:%d,num_of_runways:%d\n", msg->airport_num, msg->num_of_runways);
+
+    int selected_runway = -1;
+    int min_diff=MIN_DIFF;
+
+    int num_of_runways = msg->num_of_runways;
+    for(int i=0;i<num_of_runways;i++){
+        int diff=msg->runway_capacities[i]-msg->recv_data.data.total_weight;
+        printf("Difference of (%d-%d)=%d\n",msg->runway_capacities[i],msg->recv_data.data.total_weight,diff);
+        
+        if(diff>0 && diff<min_diff){
+            min_diff=diff;
+            selected_runway=i;
+        }
+    }
+    if(selected_runway==-1){
+        selected_runway=msg->num_of_runways;
+    }
+
+    printf("Selected Runway is: %d\n",selected_runway);
+
     fflush(stdout);
 }
 
@@ -92,6 +115,9 @@ int main(){
             // printf("plane id:%d,total_weight:%d,num_pass:%d",msg_recv_atc.data.plane_id,msg_recv_atc.data.total_weight,msg_recv_atc.data.num_passengers); 
             // fflush(stdout);  
             airport.recv_data=msg_recv_atc;
+            airport.airport_num=airport_num;
+            airport.num_of_runways=num_of_runways;
+            // printf("airport_num:%d,num_of_runways:%d\n",airport.airport_num,airport.num_of_runways);
             error = pthread_create(&(tids[i++]),NULL,&thread_func,(void*)&airport); 
             if(error!=0){
                 perror("Error in thread creation\n");
