@@ -159,7 +159,7 @@ int main(){
         while(message_recv.data.arrival_status==0){}//wait till any info abt landing is received from ATC
 
         if(message_recv.data.departure_status==1 && message_recv.data.arrival_status==1){
-            printf("Plane <Plane ID> has successfully traveled from Airport %d to Airport %d!\n",data.airport_num_departure,data.airport_num_arrival);
+            printf("Plane %d has successfully traveled from Airport %d to Airport %d!\n",data.plane_id,data.airport_num_departure,data.airport_num_arrival);
         }
         else if(message_recv.data.arrival_status==-1){
             printf("There was some issue with landing! Terminating plane process!\n");

@@ -138,6 +138,10 @@ int main(){
     }
     airport.runway_capacities[num_of_runways]=15000;//backup runway
 
+    for (int i = 0; i < MAX_RUNWAYS; i++) {
+        pthread_mutex_init(&runway_mutex[i], NULL);
+    }
+
     // ftok to generate unique key 
     key = ftok("airtrafficcontroller.c", 'A');
     msgid = msgget(key, 0666 | IPC_CREAT); 
