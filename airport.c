@@ -54,7 +54,7 @@ void* thread_func(void *arg){
         }
     }
     if(selected_runway==-1){
-        selected_runway=msg->runway_capacities[msg->num_of_runways];
+        selected_runway=msg->num_of_runways;
     }
 
     if(msg->recv_data.data.airport_num_departure==msg->airport_num){
@@ -128,12 +128,15 @@ int main(){
         int i=0;
         int error;
         struct msgbuf msg_recv_atc;
-        size_t val=msgrcv(msgid,&msg_recv_atc,sizeof(msg_recv_atc),(10+airport_num),0);
+        ssize_t val=msgrcv(msgid,&msg_recv_atc,sizeof(msg_recv_atc),(10+airport_num),0);
         if(val==-1){
             perror("Error while receiving msg!");
             exit(1);
         }
         else if(val>0){
+            printf("Val is: %zd\n",val);
+            // printf("Received msg from ATC!\n");
+            // printf("plane id:%d,total_weight:%d,num_pass:%d",msg_recv_atc.data.plane_id,msg_recv_atc.data.total_weight,msg_recv_atc.data.num_passengers);
             airport.recv_data=msg_recv_atc;
             error = pthread_create(&(tid[i++]),NULL,&thread_func,(void*)&airport); 
             if(error!=0){
