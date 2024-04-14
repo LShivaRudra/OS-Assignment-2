@@ -75,6 +75,8 @@ int main(){
                 exit(1);
             }
             else{
+                printf("This is the msg data being sent:\n");
+                printf("plane id:%d,total_weight:%d,num_pass:%d\n",message_send_departure.data.plane_id,message_send_departure.data.total_weight,message_send_departure.data.num_passengers);
                 printf("Message sent to departure airport!\n");
                 printf("The msg type is %ld\n",message_send_departure.msg_type);
             }

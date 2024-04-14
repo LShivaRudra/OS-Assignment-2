@@ -109,7 +109,7 @@ int main(){
     }
 
     printf("\nTotal Weight: %d",total_weight);
-    printf("\n");
+    printf("\n\n");
 
     int airport_num_departure;//will be from 1-10
     printf("Enter Airport Number for Departure: ");
