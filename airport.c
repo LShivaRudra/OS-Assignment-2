@@ -16,6 +16,7 @@
 #define MIN_DIFF 16000
 
 pthread_t tids[MAX_PLANES];//max number of planes is 10
+int thread_index=0;
 pthread_mutex_t runway_mutex[MAX_RUNWAYS];
 
 //msg queue
@@ -138,7 +139,7 @@ int main(){
     }
     airport.runway_capacities[num_of_runways]=15000;//backup runway
 
-    for (int i = 0; i < MAX_RUNWAYS; i++) {
+    for (int i = 0; i<=num_of_runways; i++) {
         pthread_mutex_init(&runway_mutex[i], NULL);
     }
 
@@ -147,7 +148,7 @@ int main(){
     msgid = msgget(key, 0666 | IPC_CREAT); 
 
     while(1){
-        int i=0;
+        // int i=0;
         int error;
         struct msgbuf msg_recv_atc;
         long msg_type=(airport_num+10);
@@ -165,7 +166,7 @@ int main(){
             airport.airport_num=airport_num;
             airport.num_of_runways=num_of_runways;
             // printf("airport_num:%d,num_of_runways:%d\n",airport.airport_num,airport.num_of_runways);
-            error = pthread_create(&(tids[i++]),NULL,&thread_func,(void*)&airport); 
+            error = pthread_create(&(tids[thread_index++]),NULL,&thread_func,(void*)&airport); 
             if(error!=0){
                 perror("Error in thread creation\n");
                 exit(1);
