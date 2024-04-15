@@ -56,7 +56,7 @@ int main(){
         }
     }
 
-    message_terminate.msg_type=21;
+    message_terminate.msg_type=22;
     message_terminate.data.termination_from_cleanup=1;
     msgsnd(msgid,&message_terminate,sizeof(message_terminate),0);
     printf("Termination message sent to ATC and Cleanup process terminated!\n");

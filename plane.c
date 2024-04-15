@@ -124,7 +124,8 @@ int main(){
     data.plane_id=plane_id;
     data.total_weight=total_weight;
     data.plane_type=plane_type;
-    // data.departure_status=0;
+    data.departure_status=0;
+    data.arrival_status=0;
 
     /*message queue*/
     key_t key = ftok("airtrafficcontroller.c", 'A');
@@ -132,11 +133,12 @@ int main(){
     
     //message to send to ATC
     struct msgbuf message_send;
-    message_send.msg_type=plane_id;
+    // long msg_type=0;
+    message_send.msg_type=22;
     message_send.data=data;
     if(msgsnd(msgid,&message_send,sizeof(message_send),0)==-1){
         perror("Error in sending msg!");
-        exit(1);
+        exit(0);
     }
 
     else{

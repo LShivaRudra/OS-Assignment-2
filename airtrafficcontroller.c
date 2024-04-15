@@ -62,11 +62,11 @@ int main(){
     msgid = msgget(key, 0666 | IPC_CREAT); 
     
     while(1){
-        if(msgrcv(msgid, &message_recv, sizeof(message_recv), 0, 0)==-1){
+        if(msgrcv(msgid, &message_recv, sizeof(message_recv), 22, 0)==-1){
             perror("Error while receiving msg!");
             exit(1);
         }
-        else if(message_recv.msg_type==21 && message_recv.data.termination_from_cleanup==1){
+        else if(message_recv.data.termination_from_cleanup==1){
             printf("Received termination request from the cleanup!\n");
             for(int i=1;i<=num_airports;i++){
                 struct msgbuf airport_termination_msg;
@@ -77,7 +77,7 @@ int main(){
             msgctl(msgid,IPC_RMID,NULL);
             return 0;
         }
-        else if(message_recv.msg_type>=1 && message_recv.msg_type<=10){
+        else if(message_recv.data.departure_status==0){
             struct msgbuf message_send_departure;
             message_send_departure=message_recv;
             message_send_departure.msg_type = message_recv.data.airport_num_departure+10;
@@ -92,7 +92,7 @@ int main(){
                 printf("The msg type is %ld\n",message_send_departure.msg_type);
             }
         }
-        else if(message_recv.msg_type>=10 && message_recv.msg_type<=20){
+        else if(message_recv.data.departure_status!=0){
             if(message_recv.data.departure_status==1 && message_recv.data.arrival_status==0){
                 struct msgbuf message_send_arrival;
                 message_send_arrival=message_recv;

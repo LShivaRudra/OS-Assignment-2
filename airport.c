@@ -15,7 +15,8 @@
 #define BACKUP_LOAD_CAPACITY 15000
 #define MIN_DIFF 16000
 
-pthread_t tids[MAX_PLANES];//max number of planes is 10
+// pthread_t tids[MAX_PLANES];//max number of planes is 10
+// int thread_index=0;
 pthread_mutex_t runway_mutex[MAX_RUNWAYS];
 
 //msg queue
@@ -87,7 +88,7 @@ void* thread_func(void *arg){
         msg_send_atc.data=msg->recv_data.data;
         msg_send_atc.data.departure_status=1;
         msg_send_atc.data.arrival_status=0;
-        msg_send_atc.msg_type=msg->airport_num+10;
+        msg_send_atc.msg_type=22;
         msgsnd(msgid,&msg_send_atc,sizeof(msg_send_atc),0);
 
         printf("Plane %d has completed boarding/loading and taken off from Runway No. %d of Airport No. %d.\n",msg->recv_data.data.plane_id,selected_runway,msg->airport_num);
@@ -107,7 +108,7 @@ void* thread_func(void *arg){
         msg_send_atc.data=msg->recv_data.data;
         msg_send_atc.data.departure_status=1;
         msg_send_atc.data.arrival_status=1;
-        msg_send_atc.msg_type=msg->airport_num+10;
+        msg_send_atc.msg_type=22;
         msgsnd(msgid,&msg_send_atc,sizeof(msg_send_atc),0);
 
         printf("Plane %d has landed on Runway No. %d of Airport No. %d and has completed deboarding/unloading.\n",msg->recv_data.data.plane_id,selected_runway,msg->airport_num);
@@ -119,6 +120,12 @@ void* thread_func(void *arg){
 }
 
 int main(){
+    // ftok to generate unique key for msg queue
+    key = ftok("airtrafficcontroller.c", 'A');
+    msgid = msgget(key, 0666 | IPC_CREAT); 
+
+    Airport airport;
+
     int airport_num;//will be 1-10
     printf("Enter Airport Number: ");
     scanf("%d",&airport_num);
@@ -126,10 +133,6 @@ int main(){
     int num_of_runways;//will be an even number between 1-10(inclusive)
     printf("Enter number of Runways: ");
     scanf("%d",&num_of_runways);
-
-    Airport airport;
-    airport.airport_num=airport_num;
-    airport.num_of_runways=num_of_runways;
     
     // int runway_capacities[MAX_RUNWAYS+1];//each value lies in 1000-12000 kgs
     printf("Enter loadCapacity of Runways (give as a space separated list in a single line):");
@@ -138,38 +141,33 @@ int main(){
     }
     airport.runway_capacities[num_of_runways]=15000;//backup runway
 
-    for (int i = 0; i < MAX_RUNWAYS; i++) {
+    for (int i = 0; i<=airport.num_of_runways; i++) {
         pthread_mutex_init(&runway_mutex[i], NULL);
     }
 
-    // ftok to generate unique key 
-    key = ftok("airtrafficcontroller.c", 'A');
-    msgid = msgget(key, 0666 | IPC_CREAT); 
-
     while(1){
-        int i=0;
         int error;
         struct msgbuf msg_recv_atc;
         long msg_type=(airport_num+10);
-        msg_recv_atc.msg_type=msg_type;
         if(msgrcv(msgid, &msg_recv_atc, sizeof(msg_recv_atc), msg_type, 0)<=0){
             perror("Error while receiving msg!");
-            exit(1);
+            // exit(1);
+            continue;
         }
 
         else{
             printf("Msg recvd from the atc!\n");
-            // printf("plane id:%d,total_weight:%d,num_pass:%d",msg_recv_atc.data.plane_id,msg_recv_atc.data.total_weight,msg_recv_atc.data.num_passengers); 
-            // fflush(stdout);  
             airport.recv_data=msg_recv_atc;
             airport.airport_num=airport_num;
             airport.num_of_runways=num_of_runways;
-            // printf("airport_num:%d,num_of_runways:%d\n",airport.airport_num,airport.num_of_runways);
-            error = pthread_create(&(tids[i++]),NULL,&thread_func,(void*)&airport); 
+
+            pthread_t tid;
+            error = pthread_create(&tid,NULL,&thread_func,(void*)&airport); 
             if(error!=0){
                 perror("Error in thread creation\n");
                 exit(1);
             } 
+            pthread_detach(tid);
             fflush(stdout);
         }
     }
