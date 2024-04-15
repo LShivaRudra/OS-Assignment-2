@@ -36,6 +36,17 @@ int main(){
     scanf("%d",&num_airports);
 
     FILE *fptr;
+
+    fptr = fopen("AirTrafficController.txt", "w");
+    
+    if (fptr == NULL) {
+        printf("Error opening file!\n");
+        return 1;
+    }
+    
+    // Close the file
+    fclose(fptr);
+
     fptr = fopen("AirTrafficController.txt","a");
     if(fptr== NULL){
         perror("unable to open file");
@@ -59,7 +70,7 @@ int main(){
             printf("Received termination request from the cleanup!\n");
             for(int i=1;i<=num_airports;i++){
                 struct msgbuf airport_termination_msg;
-                airport_termination_msg.msg_type=i;
+                airport_termination_msg.msg_type=(i+10);
                 airport_termination_msg.data.termination_from_cleanup=1;
                 msgsnd(msgid,&airport_termination_msg,sizeof(airport_termination_msg),0);
             }
@@ -75,6 +86,8 @@ int main(){
                 exit(1);
             }
             else{
+                printf("This is the msg data being sent:\n");
+                printf("plane id:%d,total_weight:%d,num_pass:%d\n",message_send_departure.data.plane_id,message_send_departure.data.total_weight,message_send_departure.data.num_passengers);
                 printf("Message sent to departure airport!\n");
                 printf("The msg type is %ld\n",message_send_departure.msg_type);
             }
