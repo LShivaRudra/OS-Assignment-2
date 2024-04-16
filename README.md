@@ -21,17 +21,17 @@
         gcc plane.c -o plane
         ./plane
     ```
-    2.**cleanup.c** :
+    2. **cleanup.c** :
     ``` 
         gcc cleanup.c -o cleanup
         ./cleanup
     ```
-    3.**airtrafficcontroller.c** :
+    3. **airtrafficcontroller.c** :
     ``` 
         gcc airtrafficcontroller.c -o atc
         ./atc
     ```
-    4.**airport.c** :
+    4. **airport.c** :
     ```
         gcc airport.c -o airport -lpthread
         ./airport
