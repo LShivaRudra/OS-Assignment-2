@@ -15,8 +15,6 @@
 #define BACKUP_LOAD_CAPACITY 15000
 #define MIN_DIFF 16000
 
-// pthread_t tids[MAX_PLANES];//max number of planes is 10
-// int thread_index=0;
 pthread_mutex_t runway_mutex[MAX_RUNWAYS];
 
 //msg queue
@@ -173,6 +171,7 @@ int main(){
 
             pthread_t tid;
             error = pthread_create(&tid,NULL,&thread_func,(void*)local_airport); 
+
             if(error!=0){
                 perror("Error in thread creation\n");
                 free(local_airport);
