@@ -71,10 +71,9 @@ void* thread_func(void *arg){
     if(selected_runway==-1){
         selected_runway=msg->num_of_runways;
     }
-
-    printf("Selected Runway is: %d\n",selected_runway);
     
     pthread_mutex_lock(&runway_mutex[selected_runway]);
+    printf("Selected Runway is: %d\n",selected_runway);
 
     if(msg->recv_data.data.airport_num_departure==msg->airport_num){
         //Simulate boarding/loading
@@ -114,8 +113,9 @@ void* thread_func(void *arg){
         printf("Plane %d has landed on Runway No. %d of Airport No. %d and has completed deboarding/unloading.\n",msg->recv_data.data.plane_id,selected_runway,msg->airport_num);
     }
 
+    free(msg);
     pthread_mutex_unlock(&runway_mutex[selected_runway]);
-    fflush(stdout);
+    // fflush(stdout);
     pthread_exit(NULL);
 }
 
@@ -157,19 +157,34 @@ int main(){
 
         else{
             printf("Msg recvd from the atc!\n");
-            airport.recv_data=msg_recv_atc;
+            // airport.recv_data=msg_recv_atc;
             airport.airport_num=airport_num;
             airport.num_of_runways=num_of_runways;
 
+            Airport *local_airport = malloc(sizeof(Airport));  // Create a local copy for the thread
+            if (local_airport == NULL) {
+                perror("Failed to allocate memory for airport");
+                continue;
+            }
+            *local_airport = airport;
+            local_airport->airport_num=airport_num;
+            local_airport->num_of_runways=num_of_runways;
+            local_airport->recv_data = msg_recv_atc;
+
             pthread_t tid;
-            error = pthread_create(&tid,NULL,&thread_func,(void*)&airport); 
+            error = pthread_create(&tid,NULL,&thread_func,(void*)local_airport); 
             if(error!=0){
                 perror("Error in thread creation\n");
-                exit(1);
+                free(local_airport);
+                continue;
             } 
             pthread_detach(tid);
-            fflush(stdout);
+            // fflush(stdout);
         }
+    }
+    // Cleanup code (unreachable in current form, consider signal handlers for graceful shutdown)
+    for (int i = 0; i <= airport.num_of_runways; i++) {
+        pthread_mutex_destroy(&runway_mutex[i]);
     }
 
     return 0;
