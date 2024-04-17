@@ -16,6 +16,8 @@
 #define MIN_DIFF 16000
 
 pthread_mutex_t runway_mutex[MAX_RUNWAYS];
+int num_of_threads_created=0;
+pthread_t threads[MAX_PLANES];
 
 //msg queue
 key_t key;
@@ -155,6 +157,26 @@ int main(){
 
         else{
             printf("Msg recvd from the atc!\n");
+
+            if(msg_recv_atc.data.termination_from_cleanup == 1) {
+                printf("Termination signal received.\n");
+                
+                // Wait for all threads to complete
+                // for(int i = 0; i < num_of_threads_created; i++) {
+                //     if(threads[i]!=0){
+                //         pthread_join(threads[i], NULL);
+                //         printf("The thread with id %lu terminated!",threads[i]);
+                //     }
+                // }
+
+                // Cleanup
+                for (int i = 0; i <= num_of_runways; i++) {
+                    pthread_mutex_destroy(&runway_mutex[i]);
+                }
+                msgctl(msgid,IPC_RMID,NULL);
+                return 0; // Exit after cleanup
+            }
+
             // airport.recv_data=msg_recv_atc;
             airport.airport_num=airport_num;
             airport.num_of_runways=num_of_runways;
@@ -169,15 +191,16 @@ int main(){
             local_airport->num_of_runways=num_of_runways;
             local_airport->recv_data = msg_recv_atc;
 
-            pthread_t tid;
-            error = pthread_create(&tid,NULL,&thread_func,(void*)local_airport); 
+            // pthread_t tid;
+            error = pthread_create(&threads[num_of_threads_created++],NULL,&thread_func,(void*)local_airport); 
+            // threads[num_of_threads_created++]=tid;
 
             if(error!=0){
                 perror("Error in thread creation\n");
                 free(local_airport);
                 continue;
             } 
-            pthread_detach(tid);
+            // pthread_detach(threads[num_of_threads_created-1]);
             // fflush(stdout);
         }
     }

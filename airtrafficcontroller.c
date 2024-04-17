@@ -61,6 +61,9 @@ int main(){
     key = ftok("airtrafficcontroller.c", 'A');
     msgid = msgget(key, 0666 | IPC_CREAT); 
     
+    int active_planes=0;//used to track the number of active planes for the sake of proper termination when cleanup process sends the signal
+    int termination_signal_received=0;
+
     while(1){
         if(msgrcv(msgid, &message_recv, sizeof(message_recv), 22, 0)==-1){
             perror("Error while receiving msg!");
@@ -68,14 +71,21 @@ int main(){
         }
         else if(message_recv.data.termination_from_cleanup==1){
             printf("Received termination request from the cleanup!\n");
-            for(int i=1;i<=num_airports;i++){
-                struct msgbuf airport_termination_msg;
-                airport_termination_msg.msg_type=(i+10);
-                airport_termination_msg.data.termination_from_cleanup=1;
-                msgsnd(msgid,&airport_termination_msg,sizeof(airport_termination_msg),0);
+            termination_signal_received=1;
+            if(active_planes==0){
+                for(int i=1;i<=num_airports;i++){
+                    struct msgbuf airport_termination_msg;
+                    airport_termination_msg.msg_type=(i+10);
+                    airport_termination_msg.data.termination_from_cleanup=1;
+                    msgsnd(msgid,&airport_termination_msg,sizeof(airport_termination_msg),0);
+                }
+                msgctl(msgid,IPC_RMID,NULL);
+                fclose(fptr);
+                return 0;
             }
-            msgctl(msgid,IPC_RMID,NULL);
-            return 0;
+            else{
+                printf("Waiting for all planes to land before terminating.\n");
+            }
         }
         else if(message_recv.data.departure_status==0){
             struct msgbuf message_send_departure;
@@ -90,6 +100,7 @@ int main(){
                 printf("plane id:%d,total_weight:%d,num_pass:%d\n",message_send_departure.data.plane_id,message_send_departure.data.total_weight,message_send_departure.data.num_passengers);
                 printf("Message sent to departure airport!\n");
                 printf("The msg type is %ld\n",message_send_departure.msg_type);
+                active_planes++;
             }
         }
         else if(message_recv.data.departure_status!=0){
@@ -108,6 +119,7 @@ int main(){
                     printf("Plane %d has departed from Airport %d and will land at Airport %d.\n", message_recv.data.plane_id,message_recv.data.airport_num_departure,message_recv.data.airport_num_arrival);
                     fclose(fptr);
                     fptr = fopen("AirTrafficController.txt", "a");
+                    // active_planes++;
                 }   
             }
             else if(message_recv.data.departure_status==1 && message_recv.data.arrival_status==1){
@@ -121,6 +133,18 @@ int main(){
                 else{
                     printf("Message sent to plane!\n");
                     printf("The msg type is %ld\n",message_send_plane.msg_type);
+                    active_planes--;
+                    if(active_planes==0 && termination_signal_received==1) {
+                        for(int i=1;i<=num_airports;i++){
+                            struct msgbuf airport_termination_msg;
+                            airport_termination_msg.msg_type=(i+10);
+                            airport_termination_msg.data.termination_from_cleanup=1;
+                            msgsnd(msgid,&airport_termination_msg,sizeof(airport_termination_msg),0);
+                        }
+                        msgctl(msgid,IPC_RMID,NULL);
+                        fclose(fptr);
+                        return 0;
+                    }
                 }
             }
         }
