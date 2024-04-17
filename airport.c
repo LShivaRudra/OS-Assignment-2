@@ -162,20 +162,19 @@ int main(){
                 printf("Termination signal received.\n");
                 
                 // Wait for all threads to complete
-                for(int i = 0; i < num_of_threads_created; i++) {
-                    if(threads[i]!=0){
-                        pthread_join(threads[i], NULL);
-                        printf("The thread with id %lu terminated!",threads[i]);
-                    }
-                }
+                // for(int i = 0; i < num_of_threads_created; i++) {
+                //     if(threads[i]!=0){
+                //         pthread_join(threads[i], NULL);
+                //         printf("The thread with id %lu terminated!",threads[i]);
+                //     }
+                // }
 
                 // Cleanup
-                for (int i = 0; i <= airport.num_of_runways; i++) {
+                for (int i = 0; i <= num_of_runways; i++) {
                     pthread_mutex_destroy(&runway_mutex[i]);
                 }
-
-                // msgctl(msgid, IPC_RMID, NULL); // Destroy the message queue
-                exit(0); // Exit after cleanup
+                msgctl(msgid,IPC_RMID,NULL);
+                return 0; // Exit after cleanup
             }
 
             // airport.recv_data=msg_recv_atc;
