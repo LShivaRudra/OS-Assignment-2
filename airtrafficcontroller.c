@@ -62,6 +62,7 @@ int main(){
     msgid = msgget(key, 0666 | IPC_CREAT); 
     
     int active_planes=0;//used to track the number of active planes for the sake of proper termination when cleanup process sends the signal
+    int termination_signal_received=0;
 
     while(1){
         if(msgrcv(msgid, &message_recv, sizeof(message_recv), 22, 0)==-1){
@@ -70,6 +71,7 @@ int main(){
         }
         else if(message_recv.data.termination_from_cleanup==1){
             printf("Received termination request from the cleanup!\n");
+            termination_signal_received=1;
             if(active_planes==0){
                 for(int i=1;i<=num_airports;i++){
                     struct msgbuf airport_termination_msg;
@@ -132,6 +134,17 @@ int main(){
                     printf("Message sent to plane!\n");
                     printf("The msg type is %ld\n",message_send_plane.msg_type);
                     active_planes--;
+                    if(active_planes==0 && termination_signal_received==1) {
+                        for(int i=1;i<=num_airports;i++){
+                            struct msgbuf airport_termination_msg;
+                            airport_termination_msg.msg_type=(i+10);
+                            airport_termination_msg.data.termination_from_cleanup=1;
+                            msgsnd(msgid,&airport_termination_msg,sizeof(airport_termination_msg),0);
+                        }
+                        msgctl(msgid,IPC_RMID,NULL);
+                        fclose(fptr);
+                        return 0;
+                    }
                 }
             }
         }

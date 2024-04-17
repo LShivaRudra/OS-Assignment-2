@@ -165,6 +165,7 @@ int main(){
                 for(int i = 0; i < num_of_threads_created; i++) {
                     if(threads[i]!=0){
                         pthread_join(threads[i], NULL);
+                        printf("The thread with id %lu terminated!",threads[i]);
                     }
                 }
 
