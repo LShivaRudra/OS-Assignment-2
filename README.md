@@ -8,32 +8,31 @@
 
 ## Instructions for Running:
 1. Create 6 terminals:
-    1. 2 planes
-    2. 2 airports
-    3. 1 ATC
-    4. 1 Cleanup
+    1. 1 cleanup
+    2. 1 ATC
+    3. 2 airports
+    4. 2 planes
 
     however, you can create any number of planes and airports you want.
 
 2. Type the following commands in the terminal for the respective `.c` file:
-    1. **plane.c** : 
-    ``` 
-        gcc plane.c -o plane
-        ./plane
-    ```
-    2. **cleanup.c** :
+    1. **cleanup.c** :
     ``` 
         gcc cleanup.c -o cleanup
         ./cleanup
     ```
-    3. **airtrafficcontroller.c** :
+    2. **airtrafficcontroller.c** :
     ``` 
         gcc airtrafficcontroller.c -o atc
         ./atc
     ```
-    4. **airport.c** :
+    3. **airport.c** :
     ```
         gcc airport.c -o airport -lpthread
         ./airport
-
+    ```
+    4. **plane.c** : 
+    ``` 
+        gcc plane.c -o plane
+        ./plane
     ```
