@@ -36,3 +36,8 @@
         gcc plane.c -o plane
         ./plane
     ```
+## The `msg-type` can be assigned as follows:
+1. Planes : 1-10
+2. ATC: 22
+3. Airport: 10+`aipord_id`
+4. Cleanup: 21
