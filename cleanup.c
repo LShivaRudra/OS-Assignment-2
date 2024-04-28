@@ -41,7 +41,7 @@ int main(){
     }
 
     while(1){
-        printf("Do you want to close the hotel? Enter Y for Yes and N for No: ");
+        printf("Do you want the Air Traffic Control System to terminate?(Y for Yes and N for No) ");
         char answer;
         scanf(" %c",&answer);
 
